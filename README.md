@@ -1,4 +1,4 @@
-# AppNEra
+# AppNEra (App's New Era)
 
 **Tired of missing apps on Linux?**
 **Concerned about installing random web wrappers from unknown sources?**
