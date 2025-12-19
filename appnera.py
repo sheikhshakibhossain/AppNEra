@@ -484,9 +484,31 @@ Categories=Network;WebBrowser;
 
         # Display apps
         for app in apps:
-            app_btn = ctk.CTkButton(
+            # Create a frame for each app item
+            app_frame = ctk.CTkFrame(
                 self.apps_list_frame,
-                text=app["name"],
+                fg_color="transparent",
+            )
+            app_frame.pack(fill="x", pady=2, padx=4)
+            
+            # Try to load and display the app icon
+            icon_image = None
+            try:
+                from PIL import Image
+                icon_path = app["path"] / "icon.png"
+                if icon_path.exists():
+                    img = Image.open(icon_path)
+                    img = img.resize((32, 32), Image.Resampling.LANCZOS)
+                    icon_image = ctk.CTkImage(light_image=img, dark_image=img, size=(32, 32))
+            except Exception:
+                pass
+            
+            # Create button with icon and text
+            app_btn = ctk.CTkButton(
+                app_frame,
+                text=f"  {app['name']}" if icon_image else app["name"],
+                image=icon_image if icon_image else None,
+                compound="left",
                 height=48,
                 anchor="w",
                 fg_color="transparent",
@@ -494,7 +516,11 @@ Categories=Network;WebBrowser;
                 text_color=COLORS["text_primary"],
                 command=lambda a=app: self._show_app_details(a),
             )
-            app_btn.pack(fill="x", pady=2, padx=4)
+            app_btn.pack(fill="x")
+            
+            # Keep reference to prevent garbage collection
+            if icon_image:
+                app_btn.icon_image = icon_image
 
     def _get_created_apps(self) -> list:
         """Get list of created apps"""
@@ -523,14 +549,41 @@ Categories=Network;WebBrowser;
         details_frame = ctk.CTkFrame(self.right_panel, fg_color="transparent")
         details_frame.pack(fill="both", expand=True, padx=24, pady=24)
 
-        # App name
+        # Top section with icon and name
+        header_frame = ctk.CTkFrame(details_frame, fg_color="transparent")
+        header_frame.pack(anchor="w", pady=(0, 16), fill="x")
+        
+        # App icon (larger version)
+        try:
+            from PIL import Image
+            icon_path = app["path"] / "icon.png"
+            if icon_path.exists():
+                img = Image.open(icon_path)
+                img = img.resize((64, 64), Image.Resampling.LANCZOS)
+                icon_image = ctk.CTkImage(light_image=img, dark_image=img, size=(64, 64))
+                
+                icon_label = ctk.CTkLabel(
+                    header_frame,
+                    image=icon_image,
+                    text="",
+                )
+                icon_label.pack(side="left", padx=(0, 16))
+                icon_label.icon_image = icon_image  # Keep reference
+        except Exception:
+            pass
+        
+        # App name next to icon
+        name_container = ctk.CTkFrame(header_frame, fg_color="transparent")
+        name_container.pack(side="left", fill="both", expand=True)
+        
         name_label = ctk.CTkLabel(
-            details_frame,
+            name_container,
             text=app["name"],
             font=("Ubuntu", 24, "bold"),
             text_color=COLORS["text_primary"],
+            anchor="w",
         )
-        name_label.pack(anchor="w", pady=(0, 16))
+        name_label.pack(anchor="w")
 
         # App path
         path_label = ctk.CTkLabel(
