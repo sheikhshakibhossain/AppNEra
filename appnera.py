@@ -37,7 +37,7 @@ class AppNEraGUI(ctk.CTk):
 
         # Window configuration
         self.title("AppNEra")
-        self.geometry("1400x900")
+        self.geometry("1500x950")
         # self.minsize(1200, 800)
 
         # Set theme
@@ -46,6 +46,10 @@ class AppNEraGUI(ctk.CTk):
 
         # Configure colors
         self._configure_colors()
+
+        # Font size multiplier (default 1.2 = Large)
+        self.font_multiplier = 1.2
+        self._load_settings()
 
         # Build UI
         self._create_header()
@@ -69,7 +73,7 @@ class AppNEraGUI(ctk.CTk):
         title = ctk.CTkLabel(
             header_frame,
             text="AppNEra",
-            font=("Ubuntu", 28, "bold"),
+            font=("Ubuntu", int(28 * self.font_multiplier), "bold"),
             text_color=COLORS["accent"],
         )
         title.pack(pady=(24, 4))
@@ -77,7 +81,7 @@ class AppNEraGUI(ctk.CTk):
         tagline = ctk.CTkLabel(
             header_frame,
             text="A new era for web apps on Linux",
-            font=("Ubuntu", 13),
+            font=("Ubuntu", int(13 * self.font_multiplier)),
             text_color=COLORS["text_secondary"],
         )
         tagline.pack(pady=(0, 16))
@@ -94,21 +98,33 @@ class AppNEraGUI(ctk.CTk):
             text_color=COLORS["text_primary"],
         )
         self.tabview.pack(fill="both", expand=True, padx=32, pady=(0, 32))
+        
+        # Configure tab label font size
+        try:
+            self.tabview._segmented_button.configure(font=("Ubuntu", int(13 * self.font_multiplier)))
+        except:
+            pass
 
         # Create tabs
         self.tabview.add("Create App")
         self.tabview.add("Manage Apps")
+        self.tabview.add("Settings")
         self.tabview.add("Help")
         self.tabview.add("About")
 
         # Build tab contents
         self._build_create_tab()
         self._build_manage_tab()
+        self._build_settings_tab()
         self._build_help_tab()
         self._build_about_tab()
 
     def _build_create_tab(self):
         """Build the Create App tab UI"""
+        self._build_create_tab_content()
+    
+    def _build_create_tab_content(self):
+        """Build the Create App tab content (separated for rebuilding)"""
         tab = self.tabview.tab("Create App")
 
         # Main card container
@@ -127,7 +143,7 @@ class AppNEraGUI(ctk.CTk):
         url_label = ctk.CTkLabel(
             form_frame,
             text="Web App URL *",
-            font=("Ubuntu", 12, "bold"),
+            font=("Ubuntu", int(12 * self.font_multiplier), "bold"),
             text_color=COLORS["text_primary"],
             anchor="w",
         )
@@ -143,6 +159,7 @@ class AppNEraGUI(ctk.CTk):
             placeholder_text_color=COLORS["text_secondary"],
             border_width=1,
             corner_radius=6,
+            font=("Ubuntu", int(12 * self.font_multiplier)),
         )
         self.url_entry.pack(fill="x", pady=(0, 24))
 
@@ -150,7 +167,7 @@ class AppNEraGUI(ctk.CTk):
         name_label = ctk.CTkLabel(
             form_frame,
             text="App Name *",
-            font=("Ubuntu", 12, "bold"),
+            font=("Ubuntu", int(12 * self.font_multiplier), "bold"),
             text_color=COLORS["text_primary"],
             anchor="w",
         )
@@ -166,6 +183,7 @@ class AppNEraGUI(ctk.CTk):
             placeholder_text_color=COLORS["text_secondary"],
             border_width=1,
             corner_radius=6,
+            font=("Ubuntu", int(12 * self.font_multiplier)),
         )
         self.name_entry.pack(fill="x", pady=(0, 24))
 
@@ -173,7 +191,7 @@ class AppNEraGUI(ctk.CTk):
         icon_label = ctk.CTkLabel(
             form_frame,
             text="App Icon *",
-            font=("Ubuntu", 12, "bold"),
+            font=("Ubuntu", int(12 * self.font_multiplier), "bold"),
             text_color=COLORS["text_primary"],
             anchor="w",
         )
@@ -203,7 +221,7 @@ class AppNEraGUI(ctk.CTk):
             fg_color=COLORS["accent"],
             hover_color="#5a7fc7",
             text_color="white",
-            font=("Ubuntu", 14, "bold"),
+            font=("Ubuntu", int(14 * self.font_multiplier), "bold"),
             corner_radius=8,
             command=self._create_app,
         )
@@ -213,13 +231,17 @@ class AppNEraGUI(ctk.CTk):
         self.status_label = ctk.CTkLabel(
             form_frame,
             text="",
-            font=("Ubuntu", 12),
+            font=("Ubuntu", int(12 * self.font_multiplier)),
             text_color=COLORS["text_secondary"],
         )
         self.status_label.pack()
 
     def _build_manage_tab(self):
         """Build the Manage Apps tab UI"""
+        self._build_manage_tab_content()
+    
+    def _build_manage_tab_content(self):
+        """Build the Manage Apps tab content (separated for rebuilding)"""
         tab = self.tabview.tab("Manage Apps")
 
         # Container with two panels
@@ -239,7 +261,7 @@ class AppNEraGUI(ctk.CTk):
         list_title = ctk.CTkLabel(
             left_panel,
             text="Created Apps",
-            font=("Ubuntu", 16, "bold"),
+            font=("Ubuntu", int(16 * self.font_multiplier), "bold"),
             text_color=COLORS["text_primary"],
         )
         list_title.pack(pady=(16, 8), padx=16, anchor="w")
@@ -263,7 +285,7 @@ class AppNEraGUI(ctk.CTk):
         self.empty_state = ctk.CTkLabel(
             self.right_panel,
             text="No app selected\n\nSelect an app from the list\nor create your first app",
-            font=("Ubuntu", 14),
+            font=("Ubuntu", int(14 * self.font_multiplier)),
             text_color=COLORS["text_secondary"],
             justify="center",
         )
@@ -462,6 +484,192 @@ Categories=Network;WebBrowser;
                 shutil.rmtree(app_dir)
             raise e
 
+    def _build_settings_tab(self):
+        """Build the Settings tab"""
+        tab = self.tabview.tab("Settings")
+
+        # Main card container
+        card = ctk.CTkFrame(
+            tab,
+            fg_color=COLORS["bg_secondary"],
+            corner_radius=12,
+        )
+        card.pack(fill="both", expand=True, padx=80, pady=24)
+
+        content_frame = ctk.CTkFrame(card, fg_color="transparent")
+        content_frame.pack(fill="both", expand=True, padx=32, pady=32)
+
+        # Title
+        title = ctk.CTkLabel(
+            content_frame,
+            text="Settings",
+            font=("Ubuntu", int(24 * self.font_multiplier), "bold"),
+            text_color=COLORS["accent"],
+            anchor="w",
+        )
+        title.pack(anchor="w", pady=(0, 24))
+
+        # Font Size Section
+        font_section = ctk.CTkFrame(
+            content_frame,
+            fg_color=COLORS["input_bg"],
+            corner_radius=8,
+        )
+        font_section.pack(fill="x", pady=(0, 16))
+
+        font_title = ctk.CTkLabel(
+            font_section,
+            text="Font Size",
+            font=("Ubuntu", int(16 * self.font_multiplier), "bold"),
+            text_color=COLORS["text_primary"],
+            anchor="w",
+        )
+        font_title.pack(anchor="w", padx=16, pady=(16, 8))
+
+        font_desc = ctk.CTkLabel(
+            font_section,
+            text="Adjust the font size for better readability",
+            font=("Ubuntu", int(12 * self.font_multiplier)),
+            text_color=COLORS["text_secondary"],
+            anchor="w",
+        )
+        font_desc.pack(anchor="w", padx=16, pady=(0, 12))
+
+        # Slider container
+        slider_frame = ctk.CTkFrame(font_section, fg_color="transparent")
+        slider_frame.pack(fill="x", padx=16, pady=(0, 16))
+
+        # Current size label
+        self.font_size_label = ctk.CTkLabel(
+            slider_frame,
+            text=f"Size: {int(self.font_multiplier * 100)}%",
+            font=("Ubuntu", int(12 * self.font_multiplier), "bold"),
+            text_color=COLORS["accent"],
+            width=100,
+        )
+        self.font_size_label.pack(side="right", padx=(16, 0))
+
+        # Font size slider
+        self.font_slider = ctk.CTkSlider(
+            slider_frame,
+            from_=0.8,
+            to=1.5,
+            number_of_steps=14,
+            command=self._on_font_size_change,
+            fg_color=COLORS["border"],
+            progress_color=COLORS["accent"],
+            button_color=COLORS["accent"],
+            button_hover_color="#5a7fc7",
+        )
+        self.font_slider.set(self.font_multiplier)
+        self.font_slider.pack(side="left", fill="x", expand=True)
+
+        # Preset buttons
+        preset_frame = ctk.CTkFrame(font_section, fg_color="transparent")
+        preset_frame.pack(fill="x", padx=16, pady=(0, 16))
+
+        preset_label = ctk.CTkLabel(
+            preset_frame,
+            text="Quick presets:",
+            font=("Ubuntu", int(11 * self.font_multiplier)),
+            text_color=COLORS["text_secondary"],
+        )
+        preset_label.pack(side="left", padx=(0, 8))
+
+        for label, value in [("Small", 0.9), ("Normal", 1.0), ("Large", 1.2), ("Extra Large", 1.4)]:
+            btn = ctk.CTkButton(
+                preset_frame,
+                text=label,
+                width=80,
+                height=28,
+                fg_color=COLORS["bg_secondary"],
+                hover_color=COLORS["border"],
+                text_color=COLORS["text_primary"],
+                font=("Ubuntu", int(11 * self.font_multiplier)),
+                command=lambda v=value: self._set_font_size(v),
+            )
+            btn.pack(side="left", padx=4)
+
+        # Info note
+        info_frame = ctk.CTkFrame(
+            content_frame,
+            fg_color=COLORS["border"],
+            corner_radius=8,
+        )
+        info_frame.pack(fill="x", pady=(16, 0))
+
+        ctk.CTkLabel(
+            info_frame,
+            text="💡 Note: Font size changes are saved automatically and will persist across sessions.",
+            font=("Ubuntu", int(12 * self.font_multiplier)),
+            text_color=COLORS["text_secondary"],
+            anchor="w",
+            wraplength=600,
+        ).pack(anchor="w", padx=16, pady=12)
+
+    def _on_font_size_change(self, value):
+        """Handle font size slider change"""
+        self.font_multiplier = value
+        self.font_size_label.configure(text=f"Size: {int(value * 100)}%")
+        self._save_settings()
+        self._apply_font_changes()
+        
+    def _set_font_size(self, value):
+        """Set font size to a specific value"""
+        self.font_multiplier = value
+        self.font_slider.set(value)
+        self.font_size_label.configure(text=f"Size: {int(value * 100)}%")
+        self._save_settings()
+        self._apply_font_changes()
+    
+    def _apply_font_changes(self):
+        """Apply font size changes to all tabs by rebuilding them"""
+        # Remember current tab
+        current_tab = self.tabview.get()
+        
+        # Rebuild header
+        for widget in self.winfo_children():
+            if isinstance(widget, ctk.CTkFrame) and widget != self.tabview and widget != self.loading_overlay:
+                widget.destroy()
+                break
+        self._create_header()
+        
+        # Destroy and recreate entire tabview to apply font size to tab labels
+        if hasattr(self, 'tabview'):
+            self.tabview.destroy()
+        
+        self._create_tabview()
+        
+        # Restore current tab
+        try:
+            self.tabview.set(current_tab)
+        except:
+            pass
+    
+    def _load_settings(self):
+        """Load settings from config file"""
+        config_file = Path.home() / ".config" / "appnera" / "settings.conf"
+        try:
+            if config_file.exists():
+                with open(config_file, "r") as f:
+                    for line in f:
+                        if line.startswith("font_multiplier="):
+                            self.font_multiplier = float(line.split("=")[1].strip())
+        except Exception:
+            pass
+    
+    def _save_settings(self):
+        """Save settings to config file"""
+        config_dir = Path.home() / ".config" / "appnera"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        config_file = config_dir / "settings.conf"
+        
+        try:
+            with open(config_file, "w") as f:
+                f.write(f"font_multiplier={self.font_multiplier}\n")
+        except Exception:
+            pass
+
     def _refresh_apps_list(self):
         """Refresh the list of created apps"""
         # Clear existing list
@@ -475,7 +683,7 @@ Categories=Network;WebBrowser;
             empty_label = ctk.CTkLabel(
                 self.apps_list_frame,
                 text="No apps created yet\n\nGo to Create App tab\nto build your first app",
-                font=("Ubuntu", 12),
+                font=("Ubuntu", int(12 * self.font_multiplier)),
                 text_color=COLORS["text_secondary"],
                 justify="center",
             )
@@ -514,6 +722,7 @@ Categories=Network;WebBrowser;
                 fg_color="transparent",
                 hover_color=COLORS["input_bg"],
                 text_color=COLORS["text_primary"],
+                font=("Ubuntu", int(13 * self.font_multiplier)),
                 command=lambda a=app: self._show_app_details(a),
             )
             app_btn.pack(fill="x")
@@ -579,7 +788,7 @@ Categories=Network;WebBrowser;
         name_label = ctk.CTkLabel(
             name_container,
             text=app["name"],
-            font=("Ubuntu", 24, "bold"),
+            font=("Ubuntu", int(24 * self.font_multiplier), "bold"),
             text_color=COLORS["text_primary"],
             anchor="w",
         )
@@ -589,7 +798,7 @@ Categories=Network;WebBrowser;
         path_label = ctk.CTkLabel(
             details_frame,
             text=f"Location: {app['path']}",
-            font=("Ubuntu", 12),
+            font=("Ubuntu", int(12 * self.font_multiplier)),
             text_color=COLORS["text_secondary"],
             anchor="w",
         )
@@ -601,7 +810,7 @@ Categories=Network;WebBrowser;
         size_label = ctk.CTkLabel(
             details_frame,
             text=f"Size: {size_mb:.1f} MB",
-            font=("Ubuntu", 12),
+            font=("Ubuntu", int(12 * self.font_multiplier)),
             text_color=COLORS["text_secondary"],
             anchor="w",
         )
@@ -618,7 +827,7 @@ Categories=Network;WebBrowser;
             fg_color=COLORS["danger"],
             hover_color="#c75a6f",
             text_color="white",
-            font=("Ubuntu", 14, "bold"),
+            font=("Ubuntu", int(14 * self.font_multiplier), "bold"),
             corner_radius=8,
             command=lambda: self._uninstall_app(app),
         )
@@ -638,13 +847,13 @@ Categories=Network;WebBrowser;
         ctk.CTkLabel(
             dialog,
             text=f"Uninstall {app['name']}?",
-            font=("Ubuntu", 16, "bold"),
+            font=("Ubuntu", int(16 * self.font_multiplier), "bold"),
         ).pack(pady=(24, 8))
 
         ctk.CTkLabel(
             dialog,
             text="This will remove all app data\nand cannot be undone.",
-            font=("Ubuntu", 12),
+            font=("Ubuntu", int(12 * self.font_multiplier)),
             text_color=COLORS["text_secondary"],
         ).pack(pady=8)
 
@@ -701,7 +910,7 @@ Categories=Network;WebBrowser;
             self.empty_state = ctk.CTkLabel(
                 self.right_panel,
                 text="App uninstalled successfully!",
-                font=("Ubuntu", 14),
+                font=("Ubuntu", int(14 * self.font_multiplier)),
                 text_color=COLORS["success"],
             )
             self.empty_state.pack(expand=True)
@@ -713,13 +922,17 @@ Categories=Network;WebBrowser;
             error_label = ctk.CTkLabel(
                 self.right_panel,
                 text=f"Error uninstalling:\n{str(e)}",
-                font=("Ubuntu", 14),
+                font=("Ubuntu", int(14 * self.font_multiplier)),
                 text_color=COLORS["danger"],
             )
             error_label.pack(expand=True)
 
     def _build_help_tab(self):
         """Build the Help tab with troubleshooting information"""
+        self._build_help_tab_content()
+    
+    def _build_help_tab_content(self):
+        """Build the Help tab content (separated for rebuilding)"""
         tab = self.tabview.tab("Help")
 
         # Scrollable container for help content
@@ -729,6 +942,15 @@ Categories=Network;WebBrowser;
             corner_radius=12,
         )
         scroll_frame.pack(fill="both", expand=True, padx=40, pady=24)
+        
+        # Enable mouse wheel scrolling
+        def _on_mousewheel(event):
+            scroll_frame._parent_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        
+        # Bind mouse wheel events to the scrollable frame and its canvas
+        scroll_frame.bind_all("<MouseWheel>", _on_mousewheel)  # Windows/MacOS
+        scroll_frame.bind_all("<Button-4>", lambda e: scroll_frame._parent_canvas.yview_scroll(-1, "units"))  # Linux scroll up
+        scroll_frame.bind_all("<Button-5>", lambda e: scroll_frame._parent_canvas.yview_scroll(1, "units"))  # Linux scroll down
 
         content_frame = ctk.CTkFrame(scroll_frame, fg_color="transparent")
         content_frame.pack(fill="both", expand=True, padx=32, pady=24)
@@ -737,17 +959,114 @@ Categories=Network;WebBrowser;
         title = ctk.CTkLabel(
             content_frame,
             text="Why my App says Invalid URL or something like this?",
-            font=("Ubuntu", 20, "bold"),
+            font=("Ubuntu", int(20 * self.font_multiplier), "bold"),
             text_color=COLORS["text_primary"],
-            wraplength=600,
+            wraplength=800,
         )
-        title.pack(anchor="w", pady=(0, 24))
+        title.pack(anchor="w", pady=(0, 16))
 
-        # Section 1: Common causes
-        section1_title = ctk.CTkLabel(
+        # Pro Tip at the beginning
+        protip_frame = ctk.CTkFrame(
             content_frame,
+            fg_color=COLORS["border"],
+            corner_radius=8,
+        )
+        protip_frame.pack(fill="x", pady=(0, 24))
+
+        ctk.CTkLabel(
+            protip_frame,
+            text="💡 Pro Tip",
+            font=("Ubuntu", int(14 * self.font_multiplier), "bold"),
+            text_color=COLORS["accent"],
+            anchor="w",
+        ).pack(anchor="w", padx=16, pady=(12, 4))
+
+        ctk.CTkLabel(
+            protip_frame,
+            text="Open the website in your browser, log in if needed, then copy the exact URL from the address bar. This ensures you're using the correct entry point for your web app.",
+            font=("Ubuntu", int(12 * self.font_multiplier)),
+            text_color=COLORS["text_secondary"],
+            anchor="w",
+            wraplength=800,
+        ).pack(anchor="w", padx=16, pady=(0, 12))
+
+        # URL Format Examples at the beginning
+        section_examples_title = ctk.CTkLabel(
+            content_frame,
+            text="Correct URL Format Examples:",
+            font=("Ubuntu", int(16 * self.font_multiplier), "bold"),
+            text_color=COLORS["accent"],
+            anchor="center",
+        )
+        section_examples_title.pack(anchor="center", pady=(0, 12))
+
+        # Examples container (two columns)
+        examples_container = ctk.CTkFrame(content_frame, fg_color="transparent")
+        examples_container.pack(fill="x", pady=(0, 16))
+
+        # Left column - Correct examples
+        examples_left = ctk.CTkFrame(examples_container, fg_color="transparent")
+        examples_left.pack(side="left", fill="both", expand=True, padx=(0, 8))
+
+        correct_examples = [
+            ("✓ Correct", "https://website.com/login"),
+            ("✓ Correct", "https://app.service.com/dashboard"),
+        ]
+
+        for label, url in correct_examples:
+            example_frame = ctk.CTkFrame(
+                examples_left,
+                fg_color=COLORS["input_bg"],
+                corner_radius=6,
+            )
+            example_frame.pack(fill="x", pady=4)
+
+            ctk.CTkLabel(
+                example_frame,
+                text=f"{label}: {url}",
+                font=("Ubuntu", int(12 * self.font_multiplier), "bold"),
+                text_color=COLORS["success"],
+                anchor="w",
+            ).pack(anchor="w", padx=16, pady=12)
+
+        # Right column - Wrong examples
+        examples_right = ctk.CTkFrame(examples_container, fg_color="transparent")
+        examples_right.pack(side="right", fill="both", expand=True, padx=(8, 0))
+
+        wrong_examples = [
+            ("✗ Wrong", "website.com"),
+            ("✗ Wrong", "http://website.com"),
+        ]
+
+        for label, url in wrong_examples:
+            example_frame = ctk.CTkFrame(
+                examples_right,
+                fg_color=COLORS["input_bg"],
+                corner_radius=6,
+            )
+            example_frame.pack(fill="x", pady=4)
+
+            ctk.CTkLabel(
+                example_frame,
+                text=f"{label}: {url}",
+                font=("Ubuntu", int(12 * self.font_multiplier)),
+                text_color=COLORS["danger"],
+                anchor="w",
+            ).pack(anchor="w", padx=16, pady=12)
+
+        # Two-column container
+        columns_container = ctk.CTkFrame(content_frame, fg_color="transparent")
+        columns_container.pack(fill="both", expand=True)
+
+        # Left column
+        left_column = ctk.CTkFrame(columns_container, fg_color="transparent")
+        left_column.pack(side="left", fill="both", expand=True, padx=(0, 8))
+
+        # Section 1: Common causes (Left column)
+        section1_title = ctk.CTkLabel(
+            left_column,
             text="Common Causes:",
-            font=("Ubuntu", 16, "bold"),
+            font=("Ubuntu", int(16 * self.font_multiplier), "bold"),
             text_color=COLORS["accent"],
             anchor="w",
         )
@@ -770,22 +1089,27 @@ Categories=Network;WebBrowser;
 
         for line in causes_text:
             ctk.CTkLabel(
-                content_frame,
+                left_column,
                 text=line,
-                font=("Ubuntu", 12),
+                font=("Ubuntu", int(12 * self.font_multiplier)),
                 text_color=COLORS["text_primary"] if not line.startswith("   →") else COLORS["text_secondary"],
                 anchor="w",
+                wraplength=450,
             ).pack(anchor="w", pady=2)
 
-        # Section 2: How to fix
+        # Right column
+        right_column = ctk.CTkFrame(columns_container, fg_color="transparent")
+        right_column.pack(side="right", fill="both", expand=True, padx=(8, 0))
+
+        # Section 2: How to fix (Right column)
         section2_title = ctk.CTkLabel(
-            content_frame,
+            right_column,
             text="How to Fix:",
-            font=("Ubuntu", 16, "bold"),
+            font=("Ubuntu", int(16 * self.font_multiplier), "bold"),
             text_color=COLORS["accent"],
             anchor="w",
         )
-        section2_title.pack(anchor="w", pady=(24, 12))
+        section2_title.pack(anchor="w", pady=(0, 12))
 
         fix_text = [
             "✓ Always use the complete URL including protocol (https://)",
@@ -807,74 +1131,20 @@ Categories=Network;WebBrowser;
 
         for line in fix_text:
             ctk.CTkLabel(
-                content_frame,
+                right_column,
                 text=line,
-                font=("Ubuntu", 12),
+                font=("Ubuntu", int(12 * self.font_multiplier)),
                 text_color=COLORS["text_primary"] if line.startswith("✓") else COLORS["text_secondary"],
                 anchor="w",
+                wraplength=450,
             ).pack(anchor="w", pady=2)
-
-        # Section 3: URL format examples
-        section3_title = ctk.CTkLabel(
-            content_frame,
-            text="Correct URL Format Examples:",
-            font=("Ubuntu", 16, "bold"),
-            text_color=COLORS["accent"],
-            anchor="w",
-        )
-        section3_title.pack(anchor="w", pady=(24, 12))
-
-        # Examples in boxes
-        examples = [
-            ("✓ Correct", "https://website.com/login", COLORS["success"]),
-            ("✓ Correct", "https://app.service.com/dashboard", COLORS["success"]),
-            ("✗ Wrong", "website.com", COLORS["danger"]),
-            ("✗ Wrong", "http://website.com", COLORS["danger"]),
-        ]
-
-        for label, url, color in examples:
-            example_frame = ctk.CTkFrame(
-                content_frame,
-                fg_color=COLORS["input_bg"],
-                corner_radius=6,
-            )
-            example_frame.pack(fill="x", pady=4)
-
-            ctk.CTkLabel(
-                example_frame,
-                text=f"{label}: {url}",
-                font=("Ubuntu", 12, "bold" if "Correct" in label else "normal"),
-                text_color=color,
-                anchor="w",
-            ).pack(anchor="w", padx=16, pady=12)
-
-        # Note section
-        note_frame = ctk.CTkFrame(
-            content_frame,
-            fg_color=COLORS["border"],
-            corner_radius=8,
-        )
-        note_frame.pack(fill="x", pady=(24, 0))
-
-        ctk.CTkLabel(
-            note_frame,
-            text="💡 Pro Tip",
-            font=("Ubuntu", 14, "bold"),
-            text_color=COLORS["accent"],
-            anchor="w",
-        ).pack(anchor="w", padx=16, pady=(12, 4))
-
-        ctk.CTkLabel(
-            note_frame,
-            text="Open the website in your browser, log in if needed, then copy the exact URL from the address bar. This ensures you're using the correct entry point for your web app.",
-            font=("Ubuntu", 12),
-            text_color=COLORS["text_secondary"],
-            anchor="w",
-            wraplength=550,
-        ).pack(anchor="w", padx=16, pady=(0, 12))
 
     def _build_about_tab(self):
         """Build the About tab with author information"""
+        self._build_about_tab_content()
+    
+    def _build_about_tab_content(self):
+        """Build the About tab content (separated for rebuilding)"""
         tab = self.tabview.tab("About")
 
         # Scrollable container for about content
@@ -888,11 +1158,14 @@ Categories=Network;WebBrowser;
         # Main container with two columns
         main_container = ctk.CTkFrame(scroll_frame, fg_color="transparent")
         main_container.pack(fill="both", expand=True, padx=32, pady=24)
+        
+        # Configure grid columns (40% left, 60% right)
+        main_container.grid_columnconfigure(0, weight=25)
+        main_container.grid_columnconfigure(1, weight=75)
 
-        # Left column - Author image
-        left_column = ctk.CTkFrame(main_container, fg_color="transparent", width=220)
-        left_column.pack(side="left", fill="y", padx=(0, 24))
-        left_column.pack_propagate(False)
+        # Left column - Author image (40%)
+        left_column = ctk.CTkFrame(main_container, fg_color="transparent")
+        left_column.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
 
         # Author image
         try:
@@ -920,85 +1193,15 @@ Categories=Network;WebBrowser;
         name_label = ctk.CTkLabel(
             left_column,
             text="Sheikh Shakib\nHossain",
-            font=("Ubuntu", 14, "bold"),
+            font=("Ubuntu", int(14 * self.font_multiplier), "bold"),
             text_color=COLORS["text_primary"],
             justify="center",
         )
-        name_label.pack()
+        name_label.pack(pady=(0, 16))
 
-        # Right column - Content
-        right_column = ctk.CTkFrame(main_container, fg_color="transparent")
-        right_column.pack(side="right", fill="both", expand=True)
-
-        # Title
-        title = ctk.CTkLabel(
-            right_column,
-            text="About the Author",
-            font=("Ubuntu", 24, "bold"),
-            text_color=COLORS["accent"],
-        )
-        title.pack(anchor="w", pady=(0, 24))
-
-        # Author bio - paragraph 1
-        bio1 = ctk.CTkLabel(
-            right_column,
-            text="Sheikh Shakib Hossain is a Linux-first developer, researcher, and systems enthusiast focused on building practical, transparent, and user-respecting software. His work spans Linux desktop tooling, automation, Flutter apps, robotics, networking, and applied security research. He is especially interested in systems that run locally, remain offline-capable when possible, and give full control to the user rather than the platform.",
-            font=("Ubuntu", 12),
-            text_color=COLORS["text_primary"],
-            anchor="w",
-            wraplength=520,
-            justify="left",
-        )
-        bio1.pack(anchor="w", pady=(0, 16))
-
-        # Author bio - paragraph 2
-        bio2 = ctk.CTkLabel(
-            right_column,
-            text="Over the years, he has worked on a wide range of projects—from notification systems and academic automation tools to ROS 2–based autonomous rover stacks, sensor-fusion algorithms, and research prototypes aligned with green computing and efficient system design. Alongside development, he is actively involved in teaching programming and problem-solving, translating complex technical ideas into simple, practical knowledge.",
-            font=("Ubuntu", 12),
-            text_color=COLORS["text_primary"],
-            anchor="w",
-            wraplength=520,
-            justify="left",
-        )
-        bio2.pack(anchor="w", pady=(0, 16))
-
-        # Philosophy section
-        philosophy_title = ctk.CTkLabel(
-            right_column,
-            text="Development Philosophy",
-            font=("Ubuntu", 16, "bold"),
-            text_color=COLORS["accent"],
-            anchor="w",
-        )
-        philosophy_title.pack(anchor="w", pady=(16, 12))
-
-        philosophy = ctk.CTkLabel(
-            right_column,
-            text="His development philosophy is rooted in Unix and Linux principles: lightweight design, clarity over abstraction, and performance without unnecessary dependencies. He prefers native solutions, clean architectures, and open standards, avoiding bloat, telemetry, and opaque frameworks whenever possible.",
-            font=("Ubuntu", 12),
-            text_color=COLORS["text_primary"],
-            anchor="w",
-            wraplength=520,
-            justify="left",
-        )
-        philosophy.pack(anchor="w", pady=(0, 16))
-
-        # AppNEra description
-        appnera_desc = ctk.CTkLabel(
-            right_column,
-            text="AppNEra reflects this mindset. It is designed to empower Linux users to build and manage applications locally, with full ownership of their system and data—open-source, efficient, and built with care.",
-            font=("Ubuntu", 12, "italic"),
-            text_color=COLORS["text_secondary"],
-            anchor="w",
-            wraplength=520,
-            justify="left",
-        )
-        appnera_desc.pack(anchor="w", pady=(0, 24))
-
-        # Links section
+        # Links section under profile
         links_frame = ctk.CTkFrame(
-            right_column,
+            left_column,
             fg_color=COLORS["input_bg"],
             corner_radius=8,
         )
@@ -1007,7 +1210,7 @@ Categories=Network;WebBrowser;
         links_title = ctk.CTkLabel(
             links_frame,
             text="Connect",
-            font=("Ubuntu", 14, "bold"),
+            font=("Ubuntu", int(14 * self.font_multiplier), "bold"),
             text_color=COLORS["accent"],
             anchor="w",
         )
@@ -1017,7 +1220,7 @@ Categories=Network;WebBrowser;
         github_label = ctk.CTkLabel(
             links_frame,
             text="GitHub: github.com/sheikhshakibhossain",
-            font=("Ubuntu", 12),
+            font=("Ubuntu", int(12 * self.font_multiplier)),
             text_color=COLORS["text_primary"],
             anchor="w",
             cursor="hand2",
@@ -1029,13 +1232,83 @@ Categories=Network;WebBrowser;
         portfolio_label = ctk.CTkLabel(
             links_frame,
             text="Portfolio: sheikhshakibhossain.github.io",
-            font=("Ubuntu", 12),
+            font=("Ubuntu", int(12 * self.font_multiplier)),
             text_color=COLORS["text_primary"],
             anchor="w",
             cursor="hand2",
         )
         portfolio_label.pack(anchor="w", padx=16, pady=(4, 16))
         portfolio_label.bind("<Button-1>", lambda e: self._open_url("https://sheikhshakibhossain.github.io"))
+
+        # Right column - Content (60%)
+        right_column = ctk.CTkFrame(main_container, fg_color="transparent")
+        right_column.grid(row=0, column=1, sticky="nsew", padx=(12, 0))
+
+        # Title
+        title = ctk.CTkLabel(
+            right_column,
+            text="About the Author",
+            font=("Ubuntu", int(24 * self.font_multiplier), "bold"),
+            text_color=COLORS["accent"],
+        )
+        title.pack(anchor="w", pady=(0, 24))
+
+        # Author bio - paragraph 1
+        bio1 = ctk.CTkLabel(
+            right_column,
+            text="Sheikh Shakib Hossain is a Linux-first developer, researcher, and systems enthusiast focused on building practical, transparent, and user-respecting software. His work spans Linux desktop tooling, automation, Flutter apps, robotics, networking, and applied security research. He is especially interested in systems that run locally, remain offline-capable when possible, and give full control to the user rather than the platform.",
+            font=("Ubuntu", int(12 * self.font_multiplier)),
+            text_color=COLORS["text_primary"],
+            anchor="w",
+            wraplength=520,
+            justify="left",
+        )
+        bio1.pack(anchor="w", pady=(0, 16))
+
+        # Author bio - paragraph 2
+        bio2 = ctk.CTkLabel(
+            right_column,
+            text="Over the years, he has worked on a wide range of projects—from notification systems and academic automation tools to ROS 2–based autonomous rover stacks, sensor-fusion algorithms, and research prototypes aligned with green computing and efficient system design. Alongside development, he is actively involved in teaching programming and problem-solving, translating complex technical ideas into simple, practical knowledge.",
+            font=("Ubuntu", int(12 * self.font_multiplier)),
+            text_color=COLORS["text_primary"],
+            anchor="w",
+            wraplength=520,
+            justify="left",
+        )
+        bio2.pack(anchor="w", pady=(0, 16))
+
+        # Philosophy section
+        philosophy_title = ctk.CTkLabel(
+            right_column,
+            text="Development Philosophy",
+            font=("Ubuntu", int(16 * self.font_multiplier), "bold"),
+            text_color=COLORS["accent"],
+            anchor="w",
+        )
+        philosophy_title.pack(anchor="w", pady=(16, 12))
+
+        philosophy = ctk.CTkLabel(
+            right_column,
+            text="His development philosophy is rooted in Unix and Linux principles: lightweight design, clarity over abstraction, and performance without unnecessary dependencies. He prefers native solutions, clean architectures, and open standards, avoiding bloat, telemetry, and opaque frameworks whenever possible.",
+            font=("Ubuntu", int(12 * self.font_multiplier)),
+            text_color=COLORS["text_primary"],
+            anchor="w",
+            wraplength=520,
+            justify="left",
+        )
+        philosophy.pack(anchor="w", pady=(0, 16))
+
+        # AppNEra description
+        appnera_desc = ctk.CTkLabel(
+            right_column,
+            text="AppNEra reflects this mindset. It is designed to empower Linux users to build and manage applications locally, with full ownership of their system and data—open-source, efficient, and built with care.",
+            font=("Ubuntu", int(12 * self.font_multiplier), "italic"),
+            text_color=COLORS["text_secondary"],
+            anchor="w",
+            wraplength=520,
+            justify="left",
+        )
+        appnera_desc.pack(anchor="w", pady=(0, 24))
 
     def _open_url(self, url: str):
         """Open URL in default browser"""
@@ -1092,7 +1365,7 @@ Categories=Network;WebBrowser;
         self.loading_label = ctk.CTkLabel(
             inner_frame,
             text=message,
-            font=("Ubuntu", 16, "bold"),
+            font=("Ubuntu", int(16 * self.font_multiplier), "bold"),
             text_color=COLORS["text_primary"],
         )
         self.loading_label.pack(pady=(0, 8))
@@ -1101,7 +1374,7 @@ Categories=Network;WebBrowser;
         self.loading_subtitle = ctk.CTkLabel(
             inner_frame,
             text="This may take a moment...",
-            font=("Ubuntu", 12),
+            font=("Ubuntu", int(12 * self.font_multiplier)),
             text_color=COLORS["text_secondary"],
         )
         self.loading_subtitle.pack()
