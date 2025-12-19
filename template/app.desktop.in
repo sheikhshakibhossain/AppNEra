@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=@APP_NAME@
+Comment=@APP_NAME@
+Exec=@APP_DIR@/run.sh
+Icon=@APP_DIR@/icon.png
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
