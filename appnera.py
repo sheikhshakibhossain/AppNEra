@@ -8,6 +8,7 @@ Modern GUI for creating lightweight web app wrappers
 import os
 import shutil
 import subprocess
+import threading
 from pathlib import Path
 from tkinter import filedialog
 from typing import Optional
@@ -52,6 +53,9 @@ class AppNEraGUI(ctk.CTk):
 
         # Track created apps
         self.apps_dir = Path.home() / ".local"
+        
+        # Loading overlay (initially hidden)
+        self.loading_overlay = None
 
     def _configure_colors(self):
         """Configure custom color theme"""
@@ -313,32 +317,51 @@ class AppNEraGUI(ctk.CTk):
             self._show_status("❌ URL must start with http:// or https://", COLORS["danger"])
             return
 
-        # Show progress
-        self._show_status("⏳ Creating app...", COLORS["accent"])
+        # Show loading overlay
+        self._show_loading("Creating your app...")
         self.create_btn.configure(state="disabled")
         self.update()
 
-        try:
-            self._build_app(url, name, icon_path)
-            self._show_status("✅ App created successfully!", COLORS["success"])
-            
-            # Clear form
-            self.url_entry.delete(0, "end")
-            self.name_entry.delete(0, "end")
-            self.selected_icon_path = None
-            self.icon_btn.configure(
-                text="🖼️  Select Icon",
-                fg_color=COLORS["input_bg"],
-                text_color=COLORS["text_secondary"],
-            )
-            
-            # Refresh manage tab
-            self._refresh_apps_list()
-            
-        except Exception as e:
-            self._show_status(f"❌ Error: {str(e)}", COLORS["danger"])
-        finally:
-            self.create_btn.configure(state="normal")
+        # Run app creation in a separate thread to keep UI responsive
+        def build_thread():
+            try:
+                self._build_app(url, name, icon_path)
+                
+                # Schedule UI updates on main thread
+                self.after(0, self._on_build_success)
+                
+            except Exception as e:
+                # Schedule error handling on main thread
+                self.after(0, lambda: self._on_build_error(str(e)))
+        
+        # Start the build process in background
+        thread = threading.Thread(target=build_thread, daemon=True)
+        thread.start()
+    
+    def _on_build_success(self):
+        """Called on main thread when build succeeds"""
+        self._hide_loading()
+        self._show_status("✅ App created successfully!", COLORS["success"])
+        
+        # Clear form
+        self.url_entry.delete(0, "end")
+        self.name_entry.delete(0, "end")
+        self.selected_icon_path = None
+        self.icon_btn.configure(
+            text="🖼️  Select Icon",
+            fg_color=COLORS["input_bg"],
+            text_color=COLORS["text_secondary"],
+        )
+        
+        # Refresh manage tab
+        self._refresh_apps_list()
+        self.create_btn.configure(state="normal")
+    
+    def _on_build_error(self, error_msg: str):
+        """Called on main thread when build fails"""
+        self._hide_loading()
+        self._show_status(f"❌ Error: {error_msg}", COLORS["danger"])
+        self.create_btn.configure(state="normal")
 
     def _build_app(self, url: str, name: str, icon_path: Optional[str]):
         """Build the web app using the template"""
@@ -351,20 +374,24 @@ class AppNEraGUI(ctk.CTk):
             raise ValueError(f"App '{name}' already exists")
 
         # Create app directory
+        self.after(0, lambda: self._update_loading_message("Creating app directory..."))
         app_dir.mkdir(parents=True, exist_ok=True)
 
         try:
             # Copy template files
+            self.after(0, lambda: self._update_loading_message("Copying template files..."))
             shutil.copy(template_dir / "app.py", app_dir / "app.py")
             shutil.copy(template_dir / "uninstall.sh", app_dir / "uninstall.sh")
             os.chmod(app_dir / "uninstall.sh", 0o755)
 
             # Copy selected icon
+            self.after(0, lambda: self._update_loading_message("Setting up icon..."))
             if not Path(icon_path).exists():
                 raise ValueError("Selected icon file not found")
             shutil.copy(icon_path, app_dir / "icon.png")
 
             # Create isolated venv
+            self.after(0, lambda: self._update_loading_message("Creating Python environment..."))
             subprocess.run(
                 ["python3", "-m", "venv", str(app_dir / "venv")],
                 check=True,
@@ -372,6 +399,7 @@ class AppNEraGUI(ctk.CTk):
             )
 
             # Install PyQt5 dependencies in venv (fully self-contained, no system packages needed)
+            self.after(0, lambda: self._update_loading_message("Installing dependencies (this may take a moment)..."))
             pip_path = app_dir / "venv" / "bin" / "pip"
             subprocess.run(
                 [str(pip_path), "install", "PyQt5", "PyQtWebEngine"],
@@ -380,6 +408,7 @@ class AppNEraGUI(ctk.CTk):
             )
 
             # Create launcher script
+            self.after(0, lambda: self._update_loading_message("Creating launcher..."))
             launcher_path = app_dir / "run.sh"
             launcher_content = f"""#!/usr/bin/env bash
 set -euo pipefail
@@ -394,6 +423,7 @@ exec "{app_dir / 'venv' / 'bin' / 'python'}" "{app_dir / 'app.py'}"
             os.chmod(launcher_path, 0o755)
 
             # Create .desktop entry
+            self.after(0, lambda: self._update_loading_message("Registering app..."))
             desktop_content = f"""[Desktop Entry]
 Name={name}
 Comment={name}
@@ -423,6 +453,8 @@ Categories=Network;WebBrowser;
             if icon_link.exists():
                 icon_link.unlink()
             icon_link.symlink_to(app_dir / "icon.png")
+            
+            self.after(0, lambda: self._update_loading_message("Finalizing..."))
 
         except Exception as e:
             # Cleanup on failure
@@ -960,6 +992,83 @@ Categories=Network;WebBrowser;
     def _show_status(self, message: str, color: str):
         """Show status message"""
         self.status_label.configure(text=message, text_color=color)
+
+    def _show_loading(self, message: str = "Creating app..."):
+        """Show loading overlay with animation"""
+        if self.loading_overlay is not None:
+            return
+        
+        # Create overlay frame that covers entire window
+        self.loading_overlay = ctk.CTkFrame(
+            self,
+            fg_color=COLORS["bg_primary"],
+            corner_radius=0,
+        )
+        self.loading_overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+        
+        # Container for centered content
+        content_frame = ctk.CTkFrame(
+            self.loading_overlay,
+            fg_color=COLORS["bg_secondary"],
+            corner_radius=16,
+            border_width=2,
+            border_color=COLORS["accent"],
+        )
+        content_frame.place(relx=0.5, rely=0.5, anchor="center")
+        
+        # Inner padding frame
+        inner_frame = ctk.CTkFrame(
+            content_frame,
+            fg_color="transparent",
+        )
+        inner_frame.pack(padx=48, pady=40)
+        
+        # Loading spinner (using progress bar in indeterminate mode)
+        self.loading_progress = ctk.CTkProgressBar(
+            inner_frame,
+            mode="indeterminate",
+            width=300,
+            height=6,
+            fg_color=COLORS["border"],
+            progress_color=COLORS["accent"],
+        )
+        self.loading_progress.pack(pady=(0, 20))
+        self.loading_progress.start()
+        
+        # Loading message
+        self.loading_label = ctk.CTkLabel(
+            inner_frame,
+            text=message,
+            font=("Ubuntu", 16, "bold"),
+            text_color=COLORS["text_primary"],
+        )
+        self.loading_label.pack(pady=(0, 8))
+        
+        # Subtitle
+        self.loading_subtitle = ctk.CTkLabel(
+            inner_frame,
+            text="This may take a moment...",
+            font=("Ubuntu", 12),
+            text_color=COLORS["text_secondary"],
+        )
+        self.loading_subtitle.pack()
+        
+        # Raise overlay to top
+        self.loading_overlay.lift()
+        self.update()
+    
+    def _hide_loading(self):
+        """Hide loading overlay"""
+        if self.loading_overlay is not None:
+            if hasattr(self, 'loading_progress'):
+                self.loading_progress.stop()
+            self.loading_overlay.destroy()
+            self.loading_overlay = None
+    
+    def _update_loading_message(self, message: str):
+        """Update loading message - safe to call from any thread"""
+        if hasattr(self, 'loading_label') and self.loading_label.winfo_exists():
+            self.loading_label.configure(text=message)
 
 
 def main():
