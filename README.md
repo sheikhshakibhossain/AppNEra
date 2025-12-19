@@ -14,19 +14,6 @@ No middlemen.
 
 ---
 
-## 📸 Screenshots
-
-<p align="center">
-  <img src="demo/1.png" width="45%" alt="AppNEra Main Interface" />
-  <img src="demo/2.png" width="45%" alt="Create App Tab" />
-</p>
-
-<p align="center">
-  <img src="demo/3.png" width="45%" alt="Manage Apps Tab" />
-  <img src="demo/4.png" width="45%" alt="Help & About" />
-</p>
-
----
 
 ## ✨ Why AppNEra?
 
@@ -72,6 +59,8 @@ You stay in control of what runs on your machine.
 
 AppNEra is a simple graphical tool.
 
+<img src="demo/1.png" width="100%" alt="AppNEra Main Interface" />
+
 1. Launch **AppNEra**
 2. Enter:
    - Web app URL
@@ -89,11 +78,15 @@ AppNEra will automatically:
 
 The app will appear in your application menu like any native Linux program.
 
+<img src="demo/3.png" width="100%" alt="Manage Apps Tab" />
+
 ---
 
 ## 🧹 Managing & Uninstalling Apps
 
 AppNEra includes a **built-in uninstall section**.
+
+<img src="demo/2.png" width="100%" alt="Create App Tab" />
 
 - All apps created with AppNEra are automatically listed
 - Select any app to view its details
@@ -160,6 +153,8 @@ AppNEra is not just another wrapper.
 It represents a shift:
 from installing random third-party wrappers
 to **building exactly what you need — locally, securely, and cleanly**.
+
+<img src="demo/4.png" width="100%" alt="About Author Tab" />
 
 ---
 
