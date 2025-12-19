@@ -14,6 +14,20 @@ No middlemen.
 
 ---
 
+## 📸 Screenshots
+
+<p align="center">
+  <img src="demo/1.png" width="45%" alt="AppNEra Main Interface" />
+  <img src="demo/2.png" width="45%" alt="Create App Tab" />
+</p>
+
+<p align="center">
+  <img src="demo/3.png" width="45%" alt="Manage Apps Tab" />
+  <img src="demo/4.png" width="45%" alt="Help & About" />
+</p>
+
+---
+
 ## ✨ Why AppNEra?
 
 Many Linux “apps” for popular services are unofficial web wrappers created by unknown maintainers. They often ship full Chromium engines, consume excessive resources, and introduce real security risks.

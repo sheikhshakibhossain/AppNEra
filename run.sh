@@ -1,5 +1,5 @@
-#!/bib/bash
+#!/bin/bash
 
 chmod +x appnera.py
 source venv/bin/activate
-python appneara.py || python3 appneara.py
+python appnera.py || python3 appnera.py
